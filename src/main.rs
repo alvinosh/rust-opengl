@@ -61,10 +61,8 @@ fn main() {
 		scene.update();
 
 		let mut target = display.draw();
-		Renderer::render_entity(&display, &mut target, &scene.cameras[0], &scene.entities[0]);
-
 		Renderer::clear(&mut target, (0.78, 0.88, 1.0, 1.0), 1.0);
-
+		Renderer::render_scene(&display, &mut target, &scene);
 		target.finish().unwrap();
 	});
 }
