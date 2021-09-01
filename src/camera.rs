@@ -115,6 +115,7 @@ impl Camera {
 		}
 	}
 	pub fn mouse_move_input(&mut self, display: &Display, delta: (f64, f64)) {
+		println!("pitch {} , yaw {}", self.pitch, self.yaw);
 		let win = display.gl_window();
 		let size = win.window().inner_position().unwrap();
 		win.window().set_cursor_visible(false);

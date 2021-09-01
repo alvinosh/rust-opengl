@@ -2,6 +2,7 @@ mod camera;
 mod entity;
 mod mesh;
 mod renderer;
+mod scene;
 mod shader;
 mod transform;
 mod window;
@@ -9,6 +10,7 @@ mod window;
 use camera::Camera;
 use entity::Entity;
 use renderer::Renderer;
+use scene::Scene;
 use shader::Shader;
 use window::Window;
 
@@ -21,22 +23,17 @@ fn main() {
 	let display = Display::new(window.window, window.context, &window.event_loop).unwrap();
 	let (width, height) = display.get_framebuffer_dimensions();
 
-	let mut entity = Entity::from_obj("./res/monkey.obj");
+	let entity = Entity::from_obj("./res/monkey.obj");
 
-	let camera_pos = Vector3::new(0.0, -0.0, 0.0);
-	let camera_dir = Vector3::new(0.0, 0.0, 1.0);
-	let camera_up = Vector3::new(0.0, 1.0, 0.0);
-
-	let mut camera = Camera::new(
-		camera_pos,
-		camera_dir,
-		camera_up,
+	let camera = Camera::new(
+		Vector3::new(0.0, 0.0, 0.0),
+		Vector3::new(0.0, 0.0, 1.0),
+		Vector3::new(0.0, 1.0, 0.0),
 		width as f32,
 		height as f32,
 	);
 
-	let program =
-		Shader::generate_program(&display, "./shader/basic.vert", "./shader/basic.frag", None);
+	let mut scene = Scene::new(vec![entity], vec![camera], 0);
 
 	window.event_loop.run(move |event, _, control_flow| {
 		match event {
@@ -55,29 +52,20 @@ fn main() {
 			glutin::event::Event::DeviceEvent {
 				device_id: _,
 				event,
-			} => match event {
-				glutin::event::DeviceEvent::Key(input) => {
-					camera.keyboard_input(&display, input);
-				}
-				glutin::event::DeviceEvent::MouseMotion { delta: (x, y) } => {
-					camera.mouse_move_input(&display, (x, y));
-				}
-				_ => return,
-			},
+			} => scene.event(&display, event),
 			_ => return,
-		}
+		};
 
 		let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
 		*control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
 
-		camera.update();
-		entity.transform.rotation.y += 0.01;
-		entity.transform.rotation.z += 0.015;
+		scene.update();
 
 		let mut target = display.draw();
+		// Renderer::render_scene(&display, &mut target, &scene);
+		Renderer::render_entity(&display, &mut target, &scene.cameras[0], &scene.entities[0]);
 
 		Renderer::clear(&mut target, (0.78, 0.88, 1.0, 1.0), 1.0);
-		Renderer::render_entity(&display, &mut target, &program, &camera, &entity);
 
 		target.finish().unwrap();
 	});

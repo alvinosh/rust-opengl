@@ -28,7 +28,7 @@ impl Transform {
 			scale: {
 				match scale {
 					Some(p) => p,
-					None => Vector3::new(1.0, 1.0, 1.0),
+					None => Vector3::new(10.0, 10.0, 10.0),
 				}
 			},
 		}

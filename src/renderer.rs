@@ -1,5 +1,8 @@
-use super::camera::Camera;
+use super::Camera;
 use super::Entity;
+use super::Scene;
+use super::Shader;
+
 use glium::Display;
 use glium::Frame;
 use glium::Program;
@@ -15,13 +18,9 @@ impl Renderer {
 		target.clear_color_and_depth(color, depth);
 	}
 
-	pub fn render_entity(
-		display: &Display,
-		target: &mut Frame,
-		program: &Program,
-		camera: &Camera,
-		entity: &Entity,
-	) {
+	pub fn render_entity(display: &Display, target: &mut Frame, camera: &Camera, entity: &Entity) {
+		let program =
+			Shader::generate_program(&display, "./shader/basic.vert", "./shader/basic.frag", None);
 		let vb = glium::VertexBuffer::new(display, &entity.mesh.verticies).unwrap();
 		let ib = glium::IndexBuffer::new(
 			display,
@@ -47,7 +46,7 @@ impl Renderer {
 		.draw(
 			&vb,
 			&ib,
-			program,
+			&program,
 			&uniform! { model: conv::array4x4(model), view: conv::array4x4(camera.get_view()), perspective: conv::array4x4(camera.projection_matrix), u_light: light },
 			&params,
 		)
