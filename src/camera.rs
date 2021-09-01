@@ -53,8 +53,8 @@ impl Camera {
 			up: up,
 			speed: 0.1,
 			sens: 0.01f32,
-			yaw: 10f32,
-			pitch: 10f32,
+			yaw: 0f32,
+			pitch: 0f32,
 			lock: false,
 
 			forward: 0.0,
