@@ -12,7 +12,7 @@ pub struct Camera {
 	pub up: Vector3<f32>,
 	pub speed: f32,
 	pub sens: f32,
-	yaw: f32,
+	pub yaw: f32,
 	pitch: f32,
 	lock: bool,
 

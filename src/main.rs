@@ -24,7 +24,6 @@ fn main() {
 	let (width, height) = display.get_framebuffer_dimensions();
 
 	let entity = Entity::from_obj("./res/monkey.obj");
-
 	let camera = Camera::new(
 		Vector3::new(0.0, 0.0, 0.0),
 		Vector3::new(0.0, 0.0, 1.0),
@@ -62,7 +61,6 @@ fn main() {
 		scene.update();
 
 		let mut target = display.draw();
-		// Renderer::render_scene(&display, &mut target, &scene);
 		Renderer::render_entity(&display, &mut target, &scene.cameras[0], &scene.entities[0]);
 
 		Renderer::clear(&mut target, (0.78, 0.88, 1.0, 1.0), 1.0);
