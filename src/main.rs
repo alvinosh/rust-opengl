@@ -1,11 +1,12 @@
 mod camera;
+mod entity;
 mod mesh;
 mod shader;
 mod transform;
 mod window;
 
 use camera::Camera;
-use mesh::Mesh;
+use entity::Entity;
 use shader::Shader;
 use window::Window;
 
@@ -18,7 +19,7 @@ fn main() {
 	let display = Display::new(window.window, window.context, &window.event_loop).unwrap();
 	let (width, height) = display.get_framebuffer_dimensions();
 
-	let mesh = Mesh::from_obj_file("./res/monkey.obj");
+	let mut entity = Entity::from_obj("./res/monkey.obj");
 
 	let camera_pos = Vector3::new(0.0, -0.0, 0.0);
 	let camera_dir = Vector3::new(0.0, 0.0, 1.0);
@@ -32,11 +33,11 @@ fn main() {
 		height as f32,
 	);
 
-	let vb = glium::VertexBuffer::new(&display, &mesh.verticies).unwrap();
+	let vb = glium::VertexBuffer::new(&display, &entity.mesh.verticies).unwrap();
 	let ib = glium::IndexBuffer::new(
 		&display,
 		glium::index::PrimitiveType::TrianglesList,
-		&mesh.indices,
+		&entity.mesh.indices,
 	)
 	.unwrap();
 
@@ -44,6 +45,7 @@ fn main() {
 		Shader::generate_program(&display, "./shader/basic.vert", "./shader/basic.frag", None);
 
 	window.event_loop.run(move |event, _, control_flow| {
+
 		match event {
 
 			glutin::event::Event::WindowEvent { event, .. } => match event {
@@ -58,15 +60,13 @@ fn main() {
 				glutin::event::StartCause::Init => (),
 				_ => return,
 			},
-			glutin::event::Event::DeviceEvent { device_id, event } => match event {
+			glutin::event::Event::DeviceEvent { device_id: _, event } => match event {
 				glutin::event::DeviceEvent::Key(input) => {
 					camera.keyboard_input(&display,input);
-					camera.update_pos();
 
 				},
 				glutin::event::DeviceEvent::MouseMotion { delta: (x, y) } => {
 					camera.mouse_move_input(&display, (x,y));
-					camera.update_pos();
 
 				}
 				_ => return,
@@ -74,15 +74,19 @@ fn main() {
 			_ => return,
 		}
 
+		let next_frame_time = std::time::Instant::now() +
+		std::time::Duration::from_nanos(16_666_667);
+		*control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
+
+		camera.update();
+
 		let mut target = display.draw();
 		target.clear_color_and_depth((0.7, 0.89, 0.92, 1.0), 1.0);
 
-		let model = [
-			[1.0, 0.0, 0.0, 0.0],
-			[0.0, 1.0, 0.0, 0.0],
-			[0.0, 0.0, 1.0, 0.0],
-			[0.0, 0.0, 2.0, 1.0f32],
-		];
+		entity.transform.rotation.y += 0.01;
+		entity.transform.rotation.z += 0.015;
+
+		let model = entity.transform.get_model_matrix();
 
 		let light = [-1.0, 0.4, 0.9f32];
 
@@ -101,7 +105,7 @@ fn main() {
 				&vb,
 				&ib,
 				&program,
-				&uniform! { model: model, view: conv::array4x4(camera.get_view()), perspective: conv::array4x4(camera.projection_matrix), u_light: light },
+				&uniform! { model: conv::array4x4(model), view: conv::array4x4(camera.get_view()), perspective: conv::array4x4(camera.projection_matrix), u_light: light },
 				&params,
 			)
 			.unwrap();

@@ -67,7 +67,7 @@ impl Camera {
 		Camera::view_matrix(&self.position, &self.orientation, &self.up)
 	}
 
-	pub fn update_pos(&mut self) {
+	pub fn update(&mut self) {
 		self.position += self.orientation * self.speed * self.forward;
 		self.position += self.speed * self.orientation.cross(self.up).normalize() * self.side;
 		self.position += self.up * self.speed * self.top;
