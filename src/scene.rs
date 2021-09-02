@@ -19,6 +19,8 @@ impl Scene {
 		}
 	}
 	pub fn event(&mut self, display: &Display, e: &Event<()>) {
+		display.gl_window().window().request_redraw();
+
 		match e {
 			Event::DeviceEvent {
 				device_id: _,
