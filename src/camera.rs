@@ -107,7 +107,7 @@ impl Camera {
 						ElementState::Pressed => self.top = 1.0,
 						ElementState::Released => self.top = 0.0,
 					},
-					VirtualKeyCode::LControl => match input.state {
+					VirtualKeyCode::LShift => match input.state {
 						ElementState::Pressed => self.top = -1.0,
 						ElementState::Released => self.top = 0.0,
 					},

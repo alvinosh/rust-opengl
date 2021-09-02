@@ -25,7 +25,6 @@ fn main() {
 	let window: Window = Window::new("ViNOs");
 	let display = Display::new(window.window, window.context, &window.event_loop).unwrap();
 	let (width, height) = display.get_framebuffer_dimensions();
-
 	let entity = Entity::from_obj("./res/gun.obj");
 	let camera = Camera::new(
 		Vector3::new(0.0, 0.0, 0.0),
@@ -50,12 +49,12 @@ fn main() {
 					*control_flow = ControlFlow::Exit;
 					return;
 				}
-				_ => (),
+				_ => return,
 			},
 			Event::NewEvents(cause) => match cause {
 				StartCause::ResumeTimeReached { .. } => (),
 				StartCause::Init => (),
-				_ => (),
+				_ => return,
 			},
 			Event::RedrawRequested(_) => {
 				let mut target = display.draw();
@@ -63,7 +62,7 @@ fn main() {
 				Renderer::render_scene(&display, &mut target, &scene);
 				target.finish().unwrap();
 			}
-			_ => (),
+			_ => return,
 		};
 	});
 }
