@@ -33,8 +33,11 @@ fn main() {
 	);
 	let mut scene = Scene::new(vec![entity], vec![camera], 0);
 
+	let mut time = std::time::Instant::now();
+
 	window.event_loop.run(move |event, _, control_flow| {
 		*control_flow = glutin::event_loop::ControlFlow::Poll;
+		scene.event(&display, &event);
 
 		match event {
 			glutin::event::Event::WindowEvent { event, .. } => match event {
@@ -42,21 +45,20 @@ fn main() {
 					*control_flow = glutin::event_loop::ControlFlow::Exit;
 					return;
 				}
-				_ => return,
+				_ => (),
 			},
 			glutin::event::Event::NewEvents(cause) => match cause {
 				glutin::event::StartCause::ResumeTimeReached { .. } => (),
 				glutin::event::StartCause::Init => (),
-				_ => return,
+				_ => (),
 			},
-			glutin::event::Event::DeviceEvent {
-				device_id: _,
-				event,
-			} => scene.event(&display, event),
-			_ => return,
+			_ => (),
 		};
 
-		scene.update();
+		let delta_time = time.elapsed().as_secs_f32();
+		scene.update(delta_time);
+		time = std::time::Instant::now();
+
 		let mut target = display.draw();
 		Renderer::clear(&mut target, (0.78, 0.88, 1.0, 1.0), 1.0);
 		Renderer::render_scene(&display, &mut target, &scene);

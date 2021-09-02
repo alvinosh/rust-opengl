@@ -1,8 +1,10 @@
 use cgmath::prelude::*;
 use cgmath::{Deg, Matrix4, Vector3, Vector4};
+use glium::glutin::event::DeviceEvent;
 use glium::glutin::event::ElementState;
 use glium::glutin::event::KeyboardInput;
 use glium::glutin::event::VirtualKeyCode;
+
 use glium::Display;
 
 pub struct Camera {
@@ -51,8 +53,8 @@ impl Camera {
 			position: position,
 			orientation: orientation,
 			up: up,
-			speed: 0.1,
-			sens: 1.0f32,
+			speed: 10f32,
+			sens: 0.1f32,
 			yaw: 0f32,
 			pitch: 0f32,
 			lock: false,
@@ -67,10 +69,11 @@ impl Camera {
 		Camera::view_matrix(&self.position, &self.orientation, &self.up)
 	}
 
-	pub fn update(&mut self) {
-		self.position += self.speed * self.forward * self.orientation.normalize();
-		self.position += self.speed * self.side * self.orientation.cross(self.up).normalize();
-		self.position += self.speed * self.top * self.up;
+	pub fn update(&mut self, delta_time: f32) {
+		self.position += self.speed * delta_time * self.forward * self.orientation.normalize();
+		self.position +=
+			self.speed * delta_time * self.side * self.orientation.cross(self.up).normalize();
+		self.position += self.speed * delta_time * self.top * self.up;
 
 		self.orientation.x = Deg::cos(Deg(self.yaw)) * Deg::cos(Deg(self.pitch));
 		self.orientation.y = Deg::sin(Deg(self.pitch));
@@ -79,57 +82,60 @@ impl Camera {
 		self.orientation = self.orientation.normalize();
 	}
 
-	pub fn keyboard_input(&mut self, _display: &Display, key: KeyboardInput) {
-		let keycode = key.virtual_keycode.unwrap();
-		match keycode {
-			VirtualKeyCode::W => match key.state {
-				ElementState::Pressed => self.forward = 1.0,
-				ElementState::Released => self.forward = 0.0,
-			},
-			VirtualKeyCode::S => match key.state {
-				ElementState::Pressed => self.forward = -1.0,
-				ElementState::Released => self.forward = 0.0,
-			},
-			VirtualKeyCode::A => match key.state {
-				ElementState::Pressed => self.side = 1.0,
-				ElementState::Released => self.side = 0.0,
-			},
-			VirtualKeyCode::D => match key.state {
-				ElementState::Pressed => self.side = -1.0,
-				ElementState::Released => self.side = 0.0,
-			},
-			VirtualKeyCode::Space => match key.state {
-				ElementState::Pressed => self.top = 1.0,
-				ElementState::Released => self.top = 0.0,
-			},
-			VirtualKeyCode::LControl => match key.state {
-				ElementState::Pressed => self.top = -1.0,
-				ElementState::Released => self.top = 0.0,
-			},
-			VirtualKeyCode::Escape => {
-				if key.state == ElementState::Released {
-					self.lock = !self.lock
+	pub fn input(&mut self, display: &Display, key: &DeviceEvent) {
+		match key {
+			DeviceEvent::Key(input) => {
+				let keycode = input.virtual_keycode.unwrap();
+				match keycode {
+					VirtualKeyCode::W => match input.state {
+						ElementState::Pressed => self.forward = 1.0,
+						ElementState::Released => self.forward = 0.0,
+					},
+					VirtualKeyCode::S => match input.state {
+						ElementState::Pressed => self.forward = -1.0,
+						ElementState::Released => self.forward = 0.0,
+					},
+					VirtualKeyCode::A => match input.state {
+						ElementState::Pressed => self.side = 1.0,
+						ElementState::Released => self.side = 0.0,
+					},
+					VirtualKeyCode::D => match input.state {
+						ElementState::Pressed => self.side = -1.0,
+						ElementState::Released => self.side = 0.0,
+					},
+					VirtualKeyCode::Space => match input.state {
+						ElementState::Pressed => self.top = 1.0,
+						ElementState::Released => self.top = 0.0,
+					},
+					VirtualKeyCode::LControl => match input.state {
+						ElementState::Pressed => self.top = -1.0,
+						ElementState::Released => self.top = 0.0,
+					},
+					VirtualKeyCode::Escape => {
+						if input.state == ElementState::Released {
+							self.lock = !self.lock
+						}
+					}
+					_ => return,
 				}
 			}
-
+			DeviceEvent::MouseMotion { delta: (x, y) } => {
+				let win = display.gl_window();
+				let size = win.window().inner_position().unwrap();
+				win.window().set_cursor_visible(false);
+				if self.lock {
+					win.window().set_cursor_position(size).unwrap();
+				}
+				self.yaw -= *x as f32 * self.sens;
+				self.pitch -= *y as f32 * self.sens;
+				if self.pitch > 89.0 {
+					self.pitch = 89.0;
+				}
+				if self.pitch < -89.0 {
+					self.pitch = -89.0;
+				}
+			}
 			_ => return,
-		}
-	}
-	pub fn mouse_move_input(&mut self, display: &Display, delta: (f64, f64)) {
-		let win = display.gl_window();
-		let size = win.window().inner_position().unwrap();
-		win.window().set_cursor_visible(false);
-		if self.lock {
-			win.window().set_cursor_position(size).unwrap();
-		}
-
-		self.yaw -= delta.0 as f32 * self.sens;
-		self.pitch -= delta.1 as f32 * self.sens;
-		if self.pitch > 89.0 {
-			self.pitch = 89.0;
-		}
-		if self.pitch < -89.0 {
-			self.pitch = -89.0;
 		}
 	}
 

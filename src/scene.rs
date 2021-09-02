@@ -1,7 +1,7 @@
 use super::Camera;
 use super::Entity;
 
-use glium::glutin::event::DeviceEvent;
+use glium::glutin::event::Event;
 use glium::Display;
 
 pub struct Scene {
@@ -18,19 +18,19 @@ impl Scene {
 			active_camera_index: active,
 		}
 	}
-	pub fn event(&mut self, display: &Display, event: DeviceEvent) {
-		match event {
-			DeviceEvent::Key(input) => {
-				self.cameras[self.active_camera_index].keyboard_input(display, input);
-			}
-			DeviceEvent::MouseMotion { delta: (x, y) } => {
-				self.cameras[self.active_camera_index].mouse_move_input(display, (x, y));
+	pub fn event(&mut self, display: &Display, e: &Event<()>) {
+		match e {
+			Event::DeviceEvent {
+				device_id: _,
+				event,
+			} => {
+				self.cameras[self.active_camera_index].input(display, event);
 			}
 			_ => return,
 		}
 	}
-	pub fn update(&mut self) {
-		self.cameras[self.active_camera_index].update();
-		self.entities[0].transform.rotation.y += 0.01;
+	pub fn update(&mut self, delta_time: f32) {
+		self.cameras[self.active_camera_index].update(delta_time);
+		self.entities[0].transform.rotation.y += 1f32 * delta_time;
 	}
 }
