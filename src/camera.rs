@@ -1,5 +1,5 @@
 use cgmath::prelude::*;
-use cgmath::{Matrix4, Rad, Vector3, Vector4};
+use cgmath::{Deg, Matrix4, Vector3, Vector4};
 use glium::glutin::event::ElementState;
 use glium::glutin::event::KeyboardInput;
 use glium::glutin::event::VirtualKeyCode;
@@ -52,7 +52,7 @@ impl Camera {
 			orientation: orientation,
 			up: up,
 			speed: 0.1,
-			sens: 0.01f32,
+			sens: 1.0f32,
 			yaw: 0f32,
 			pitch: 0f32,
 			lock: false,
@@ -68,13 +68,14 @@ impl Camera {
 	}
 
 	pub fn update(&mut self) {
-		self.position += self.orientation * self.speed * self.forward;
-		self.position += self.speed * self.orientation.cross(self.up).normalize() * self.side;
-		self.position += self.up * self.speed * self.top;
+		self.position += self.speed * self.forward * self.orientation.normalize();
+		self.position += self.speed * self.side * self.orientation.cross(self.up).normalize();
+		self.position += self.speed * self.top * self.up;
 
-		self.orientation.x = Rad::cos(Rad(self.yaw)) * Rad::cos(Rad(self.pitch));
-		self.orientation.y = Rad::sin(Rad(self.pitch));
-		self.orientation.z = Rad::sin(Rad(self.yaw)) * Rad::cos(Rad(self.pitch));
+		self.orientation.x = Deg::cos(Deg(self.yaw)) * Deg::cos(Deg(self.pitch));
+		self.orientation.y = Deg::sin(Deg(self.pitch));
+		self.orientation.z = Deg::sin(Deg(self.yaw)) * Deg::cos(Deg(self.pitch));
+
 		self.orientation = self.orientation.normalize();
 	}
 
@@ -115,7 +116,6 @@ impl Camera {
 		}
 	}
 	pub fn mouse_move_input(&mut self, display: &Display, delta: (f64, f64)) {
-		println!("pitch {} , yaw {}", self.pitch, self.yaw);
 		let win = display.gl_window();
 		let size = win.window().inner_position().unwrap();
 		win.window().set_cursor_visible(false);
@@ -124,7 +124,7 @@ impl Camera {
 		}
 
 		self.yaw -= delta.0 as f32 * self.sens;
-		self.pitch += delta.1 as f32 * self.sens;
+		self.pitch -= delta.1 as f32 * self.sens;
 		if self.pitch > 89.0 {
 			self.pitch = 89.0;
 		}

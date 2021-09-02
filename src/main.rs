@@ -14,7 +14,7 @@ use scene::Scene;
 use shader::Shader;
 use window::Window;
 
-use cgmath::{conv, Vector3};
+use cgmath::Vector3;
 use glium::Display;
 use glium::{glutin, Surface};
 
@@ -31,10 +31,11 @@ fn main() {
 		width as f32,
 		height as f32,
 	);
-
 	let mut scene = Scene::new(vec![entity], vec![camera], 0);
 
 	window.event_loop.run(move |event, _, control_flow| {
+		*control_flow = glutin::event_loop::ControlFlow::Poll;
+
 		match event {
 			glutin::event::Event::WindowEvent { event, .. } => match event {
 				glutin::event::WindowEvent::CloseRequested => {
@@ -55,11 +56,7 @@ fn main() {
 			_ => return,
 		};
 
-		let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
-		*control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
-
 		scene.update();
-
 		let mut target = display.draw();
 		Renderer::clear(&mut target, (0.78, 0.88, 1.0, 1.0), 1.0);
 		Renderer::render_scene(&display, &mut target, &scene);
